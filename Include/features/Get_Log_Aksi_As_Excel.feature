@@ -17,21 +17,21 @@
 ## (Comments)
 #Sample Feature Definition Template
 @tag
-Feature: Get detail of log
+Feature: Get Detail of Log Aksi
   I want to use this template for my feature file
 
   @tag1
-  Scenario: Get Log Aktivitas As Excel File
-  	Given Login SLIK
+  Scenario: Get Log Aksi As Excel File
+    Given Login SLIK
   	And Login SLIK as Supervisor Succeed
-  	And Select Tab Menu "Pemantauan"
-  	And Select and Expand Left Menu "Pemantauan Aktivitas"
-  	And Select Submenu "Log Aktivitas"
-  	And Select day-1 of "Log Aktivitas"
-  	And Select Today of "Log Aktivitas"
-  	And Click Button "Cari"
-  	And Click Button "Download"
-  	And Click Toolbar Export
-  	And Export As Excel
-  	And Logout
-  	And Close browser
+  #	And Select Tab Menu "Pemantauan"
+  #	And Select and Expand Left Menu "Pemantauan Aktivitas"
+  #	And Select Submenu "Log Aksi"
+  #	And Select day-1 of "Log Aksi"
+  #	And Select Today of "Log Aksi"
+  #	And Click Button "Cari"
+  #	And Click Button "Download"
+  #	And Click Toolbar Export
+  #	And Export As Excel
+  #	And Logout
+  #	And Close browser

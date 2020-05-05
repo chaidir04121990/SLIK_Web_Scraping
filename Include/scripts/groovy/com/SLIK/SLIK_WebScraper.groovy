@@ -110,6 +110,10 @@ import javax.swing.JComponent
 
 import groovy.time.TimeCategory as TimeCategory
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys
+
+import java.time.LocalDate
+import org.openqa.selenium.interactions.Actions;
 
 class SLIK_WebScraper {
 	//	WebDriver driver=new FirefoxDriver();
@@ -139,19 +143,16 @@ class SLIK_WebScraper {
 
 		driver.get("https://slik.ojk.go.id/slik");
 		driver.manage().window().maximize();
-
+		WebUI.delay(3)
+		
 		// Input ID
 		DriverFactory.changeWebDriver(driver)
 		TestObject new_obj_ID = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@name='loginId']")
 		WebUI.setText(new_obj_ID, GlobalVariable.ID, FailureHandling.STOP_ON_FAILURE)
-		//		WebElement ID_input = driver.findElement(By.xpath("//input[@name='loginId']"));
-		//		ID_input.sendKeys(GlobalVariable.ID)
 
 		//Input Password
 		TestObject new_obj_pass = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@name='password']")
 		WebUI.setText(new_obj_pass, GlobalVariable.PASSWORD, FailureHandling.STOP_ON_FAILURE)
-		//		WebElement Password_input = driver.findElement(By.xpath("//input[@name='password']"));
-		//		Password_input.sendKeys(GlobalVariable.PASSWORD)
 
 		// get entire page screenshot
 		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
@@ -169,26 +170,28 @@ class SLIK_WebScraper {
 		String ro = response.getResponseBodyContent()
 		TestObject captcha_xpath_input = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@name='captcha-answer']")
 		WebUI.setText(captcha_xpath_input, ro, FailureHandling.STOP_ON_FAILURE)
-		//		WebElement captcha_xpath_input = driver.findElement(By.xpath("//input[@name='captcha-answer']"));
-		//		captcha_xpath_input.sendKeys(ro)
 
 		//Click Button Masuk
 		TestObject BTN_Masuk_submit = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//div/input[@type='submit' and @name='btnLogin']")
 		WebUI.click(BTN_Masuk_submit, FailureHandling.STOP_ON_FAILURE)
 		WebUI.waitForPageLoad(10)
-
-
-		//		WebElement BTN_Masuk_submit = driver.findElement(By.xpath("//div/input[@type='submit' and @name='btnLogin']"));
-		//		BTN_Masuk_submit.click()
-
 	}
 	@And("Login SLIK as Supervisor Succeed")
 	def Login_Succeed(){
-		WebUI.switchToWindowUrl("https://slik.ojk.go.id/slik")
-		WebUI.delay(10)
-		Robot r = new Robot();
-		r.keyPress(KeyEvent.VK_ENTER);
-		r.keyRelease(KeyEvent.VK_ENTER);
+		String peringatan = "//div/span[text()='Peringatan']"
+		TestObject login_failed = new TestObject().addProperty('xpath', ConditionType.EQUALS, peringatan)
+		def Verify_element = WebUI.verifyElementPresent(login_failed, 10)
+		if(Verify_element==false){
+			WebUI.switchToWindowUrl("https://slik.ojk.go.id/slik")
+			WebUI.delay(10)
+			Robot r = new Robot();
+			r.keyPress(KeyEvent.VK_ENTER);
+			r.keyRelease(KeyEvent.VK_ENTER);
+		}
+		else{
+			WebUI.refresh()
+			return capture_captcha()
+		}
 	}
 	@And("Select Tab Menu \"([^\"]*)\"")
 	def Select_Tab_Menu(String value){
@@ -212,30 +215,62 @@ class SLIK_WebScraper {
 		WebUI.verifyElementPresent(new_obj, 10, FailureHandling.STOP_ON_FAILURE)
 		WebUI.click(new_obj, FailureHandling.STOP_ON_FAILURE)
 	}
-	@And("Select day-1")
-	def Select_DayMinusOne(){
+
+	@And("Select day-1 of \"([^\"]*)\"")
+	def Select_DayMinusOne(String value){
 		WebUI.executeJavaScript("document.getElementsByClassName('input_s1')[1].removeAttribute('readonly');",null)
 		use(groovy.time.TimeCategory,{
-			def dateFormat = 'dd-MM-yyyy'
+			def dateFormat = 'ddMMyyyy'
 			def Today = new Date()
 			String TodayString=Today.format(dateFormat)
 			def TodayMin1 = Today - 1.days
 			String TodayMin1Str = TodayMin1.format(dateFormat)
 			println('Yesterday was '+TodayMin1Str)
-			TestObject new_obj_text = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@class='input_s1' and @name='START_ACTIVITY_DATE_SRC']")
-			WebUI.setText(new_obj_text, TodayMin1Str)
+			if(value=="Log Aktivitas"){
+				TestObject new_obj_text = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@class='input_s1' and @name='START_ACTIVITY_DATE_SRC']")
+				WebUI.setText(new_obj_text, TodayMin1Str)
+			}
+			else if(value=="Log Aksi"){
+				String xpath_obj = "//span[text()='Tanggal Aktivitas']/../span[2]/input[@type='text']"
+				TestObject new_obj = new TestObject().addProperty('xpath', ConditionType.EQUALS, xpath_obj)
+				WebUI.waitForElementVisible(new_obj, 30)
+				WebUI.focus(new_obj)
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.sendKeys(new_obj, Keys.chord(Keys.BACK_SPACE))
+				WebUI.setText(new_obj, TodayMin1Str)
+
+			}
+			else{
+				println("UNKNOWN PROCESS")
+			}
+			
 		})
 	}
-	@And("Select Today")
-	def Select_Today(){
+	@And("Select Today of \"([^\"]*)\"")
+	def Select_Today(String value){
 		WebUI.executeJavaScript("document.getElementsByClassName('input_s1')[2].removeAttribute('readonly');",null)
 		use(groovy.time.TimeCategory,{
-			def dateFormat = 'dd-MM-yyyy'
+			def dateFormat = 'ddMMyyyy'
 			def Today = new Date()
 			String TodayString=Today.format(dateFormat)
 			println('Today is '+TodayString)
-			TestObject new_obj_text = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@class='input_s1' and @name='END_ACTIVITY_DATE_SRC']")
-			WebUI.setText(new_obj_text, TodayString)
+			if(value=="Log Aktivitas"){
+				TestObject new_obj_text = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@class='input_s1' and @name='END_ACTIVITY_DATE_SRC']")
+				WebUI.setText(new_obj_text, TodayString)
+			}
+			else if(value=="Log Aksi"){
+				TestObject new_obj_text = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//input[@class='input_s1' and @name='END_ACTIVITY_DATE']")
+				WebUI.setText(new_obj_text, TodayString)
+			}
+			else{
+				println("UNKNOWN PROCESS")
+			}
 		})
 	}
 	@And("Click Button \"([^\"]*)\"")
@@ -261,12 +296,30 @@ class SLIK_WebScraper {
 			println('element toolbar export exist')
 			WebUI.delay(5)
 			WebUI.focus(new_toolbar_export)
-			WebUI.mouseOver(Export_As_Excel)
-			WebUI.delay(5)
-			WebUI.click(Export_As_Excel)
+			//			WebUI.mouseOver(Export_As_Excel)
+			//			WebUI.delay(5)
+			//			WebUI.click(Export_As_Excel)
 		}
 		else{
 			println('element does not exist')
 		}
+	}
+	@And("Export As Excel")
+	def ExportAsExcel(){
+		TestObject Export_As_Excel = new TestObject().addProperty('xpath', ConditionType.EQUALS, "//body[@id='reportViewer']/div[@id='menu']/div[@class='content']/ul/li[3]/p[text()='As Excel']")
+		WebUI.mouseOver(Export_As_Excel)
+		WebUI.delay(5)
+		WebUI.click(Export_As_Excel)
+	}
+	@And("Logout")
+	def logout(){
+		String xpath_logout = "//span/a[text()='Logout']"
+		TestObject new_obj_logout = new TestObject().addProperty('xpath', ConditionType.EQUALS, xpath_logout)
+		WebUI.verifyElementPresent(new_obj_logout, 10, FailureHandling.STOP_ON_FAILURE)
+		WebUI.click(new_obj_logout)
+	}
+	@And("Close browser")
+	def close_browser(){
+		WebUI.closeBrowser()
 	}
 }
